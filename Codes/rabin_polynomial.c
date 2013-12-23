@@ -37,6 +37,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 
 #include <string.h>
 #include <malloc.h>
@@ -61,20 +62,24 @@ unsigned int rabin_polynomial_average_block_size=RAB_POLYNOMIAL_AVG_BLOCK_SIZE;
 
 int rabin_poly_init_completed=0;
 
-char minimum_sha[50]; //
-int mindex = 9000; //
+char minimum_sha[50];
+int min_sha_check = 0; //revision (DO NOT DELETE): stop minimum_sha check once first write is made. // might revisit renaming
+char fn[100];
+int mindex = 9000;
 int chunkcount = 0;
+int chunk_limit = 150; //variable that limits chunking
 
 uint64_t *polynomial_lookup_buf;
 
-/*
+
 void test(int err, const char* msg) { // asterisk
     if (err) {
         fprintf(stderr, "%s: error %d\n", msg, err);
         exit(1);
     }
 }
-*/
+
+// HASHES CHUNK
 char * hashing(char *string){ // asterisk
     //char *string;
     char temp[20];
@@ -82,7 +87,8 @@ char * hashing(char *string){ // asterisk
     int n, i, len;
     static unsigned char buf[20] = {0};
     SHA1Context sha;
-    
+
+    memset(buf, 0, sizeof buf);
     memset(hash, 0, sizeof hash);
     //string = "The quick brown fox jumps over the lazy dog";
     
@@ -98,8 +104,11 @@ char * hashing(char *string){ // asterisk
         strcat(hash,temp);
     }
 	
+	//printf("____________________________________________\n");
+	//printf("minimumsha = %s\n",minimum_sha);
+	
 	// get minimum hash
-	if(int_hash < mindex){
+	if(min_sha_check == 0 && int_hash < mindex){
 		mindex = int_hash;
 		strcpy(minimum_sha,hash);
 	}
@@ -109,72 +118,126 @@ char * hashing(char *string){ // asterisk
 
 
 
-
-char ** split_into_chunks(FILE *out_file, char file_dest[], FILE *fin, int c, int val[], int partitions){ // asterisk
+// SPLITS INTO CHUNKS
+void split_into_chunks(FILE *out_file, char file_dest[], FILE *fin, int c, int val[], int partitions){ // asterisk
     // chunk directory = hash_filename.bin
 	long i = 0, j = 0;
 	int length,counter = 0;
 	char *chunkptr;
 	char split[300],shahash[50];
-	char ** hashes_array = (char **) malloc(partitions * sizeof(char*));
+	char ** hashes_array = malloc(chunk_limit * sizeof(char*)); //malloc(partitions * sizeof(char*));
 	int chunk = 18000; //?
+	int cur_chunk_count = 0; // current chunk count, for limiting
 	
-    //printf("partitions: %d\n",partitions);
 	// reset static/global variables
 	chunkcount = 0;
 	mindex = 9000;
 	memset(minimum_sha, 0, sizeof minimum_sha);
-    //printf("akjkaljfe %d\n",chunk);
-	chunkptr = (char *) malloc(chunk);
-	//printf("!!!\n");
+	chunkptr = malloc(chunk);
+	
+	
+	FILE *bin;
+	char concat[500];
+	int bin_count = 0;
+	chunkcount = partitions + 1;
+	
+	
+	
+	// THE WHILE LOOP THAT SPLITS
 	while(1){
-		//printf("\n1");
 		long f;
 		chunk = val[j];
-		//printf("\n2");
+		//printf("valval: %d\n",val[j]);
 		f = fread(chunkptr, 1, chunk, fin);//
 		//printf("f = %d\n",(int) f);//
 		//printf("cur_poly->length = %d \n",val[j]);//
 		j+=1;
+		
 		if(f > 0){
-		//printf("\n3");
 			//sprintf(split, "%s.%ld.bin", file_dest, ++i); //
+			//printf("____________________\n");
             strcpy(shahash,hashing(chunkptr));
-			//printf("\n4");
-			//printf("\n%s",split);
             sprintf(split, "%s%s.bin",file_dest,shahash); // might add .filetype some other time?!?!?!? ito yung pampalit sa split (chunk name == chunk id)
-			//printf("\n5");
-			
-/*erase*///printf("\n=====%s",split);
-
 			out_file = fopen(split, "wb"); //
-
-/*erase*/if(!out_file) printf("\nNO FILE");
-
-			//printf("\n6");
-
-/*erase*///printf("\n==%d",(int) f);
-
+			
 			fwrite(chunkptr, 1, (int) f, out_file);
-			//printf("\n7");
 			fclose(out_file);
-			//printf("\n8");
-
-			hashes_array[j-1] = (char *) malloc(50 * sizeof(char));
-			//printf("\n9");
+			
+			hashes_array[j-1] = malloc(50 * sizeof(char));
 			strcpy(hashes_array[j-1],shahash);
-			hashes_array[j]=NULL;
-			//printf("\n10");
-////
-			memset(shahash, 0, sizeof shahash);
-			//printf("\n11");
-////
+            memset(shahash, 0, sizeof shahash);
+			cur_chunk_count += 1;
+			
+			if(cur_chunk_count % chunk_limit == 0){
+				printf("HURDURHURDUR\n");
+				bin_count += 1;
+				int k = 0;
+				
+				if(cur_chunk_count == chunk_limit){ // EXTREME BINNING
+					strcpy(concat,"../chunkstempofolder/");
+					strcat(concat,"__bin__");
+					strcat(concat,fn);
+					strcat(concat,"__");
+					strcat(concat,minimum_sha);
+					strcat(concat,".bin");
+					//printf("concat: %s\n",concat);
+				}
+				bin = fopen(concat, "a");
+				
+				for(k=0;k<chunk_limit;k++){
+					if(strcmp(hashes_array[k],minimum_sha)){ // if not primary
+						fprintf(bin,"%s\n",hashes_array[k]); //might add chunk size later? (but it's pretty useless though)
+					}
+				}
+				
+				min_sha_check = 1;
+				fclose(bin);
+				j = 0;
+			}
+			
+			
 		}else break;
 	}
-
-	chunkcount = partitions;
-    //free(chunkptr); //???
-    return hashes_array; // editedit http://stackoverflow.com/questions/4085372/how-to-return-a-string-array-from-a-function
+	
+	if(cur_chunk_count % chunk_limit != 0){
+		int t = 0;
+		int k = 0;
+		
+		if(cur_chunk_count <= 2){ /////////////////////////////////// omg copy file blablabla no need to chunk, tas yung name lang magiiba okay??? (append) mamaya na haha
+			char holder[100];
+			strcpy(holder,hashes_array[0]);
+			if(cur_chunk_count == 2){
+				strcat(holder,"_");
+				strcat(holder,hashes_array[1]);
+			}
+			//strcpy(temp->chunkID,holder);
+		}
+		else{
+			if(cur_chunk_count < chunk_limit){
+				t = cur_chunk_count;
+				strcpy(concat,"../chunkstempofolder/");
+				strcat(concat,"__bin__");
+				strcat(concat,fn);
+				strcat(concat,"__");
+				strcat(concat,minimum_sha);
+				strcat(concat,".bin");
+			}
+			else{
+				t = chunkcount-(bin_count*chunk_limit);
+			}
+			bin = fopen(concat, "a");
+			
+			for(k=0;k<t;k++){ //0'd hashes
+				if(strcmp(hashes_array[k],minimum_sha)){ // if not primary
+					fprintf(bin,"%s\n",hashes_array[k]); //might add chunk size later? (but it's pretty useless though)
+				}
+			}
+			fclose(bin);
+		}
+	}
+	
+	printf("chunkcount = %d, cur_chunk_count = %d\n",chunkcount,cur_chunk_count);
+	min_sha_check = 0;
 }
 
 
@@ -185,7 +248,7 @@ char ** split_into_chunks(FILE *out_file, char file_dest[], FILE *fin, int c, in
 /**
  * Prints the list of rabin polynomials to the given file
  */
-char ** print_rabin_poly_list_to_file(FILE *out_file, struct rabin_polynomial *poly, char file_dest[], FILE *fin) { // char **file_dest & FILE :)
+void print_rabin_poly_list_to_file(FILE *out_file, struct rabin_polynomial *poly, char file_dest[], FILE *fin, char file_name[]) { // char **file_dest & FILE :)
     
     struct rabin_polynomial *cur_poly=poly;
     
@@ -207,6 +270,9 @@ char ** print_rabin_poly_list_to_file(FILE *out_file, struct rabin_polynomial *p
         print_rabin_poly_to_file(out_file,cur_poly,1);
         cur_poly=cur_poly->next_polynomial;
     }
+	
+    
+	
 	// For checking if values are same.
 	/*
 	int i=0;
@@ -214,7 +280,10 @@ char ** print_rabin_poly_list_to_file(FILE *out_file, struct rabin_polynomial *p
 		printf("%d: %d\n",i,lengthvalues[i]);
 	}
 	*/
-	return split_into_chunks(out_file,file_dest,fin,counter,lengthvalues,j-1); // added function
+    
+    
+	strcpy(fn,file_name);
+	split_into_chunks(out_file,file_dest,fin,counter,lengthvalues,j-1); // added function
     
 }
 
@@ -227,11 +296,12 @@ void print_rabin_poly_to_file(FILE *out_file, struct rabin_polynomial *poly,int 
     if(poly == NULL)
         return;
     
-    //fprintf(stdout, "%llu,%u %llu",poly->start,poly->length,poly->polynomial);
-    //fprintf(stdout, "%lu,%u %lu",poly->start,poly->length,poly->polynomial);
-
+   // fprintf(stdout, "%llu,%u %llu",poly->start,poly->length,poly->polynomial);
+    //fprintf(out_file, "%llu,%u %llu",poly->start,poly->length,poly->polynomial); //
+    ///// get thingy then get thing
     //if(new_line)
-     //   fprintf(stdout, "\n");
+    //    fprintf(stdout, "\n");
+        //fprintf(out_file, "\n");
 }
 
 /*
@@ -508,6 +578,7 @@ struct rab_block_info *read_rabin_block(void *buf, ssize_t size, struct rab_bloc
                 block->current_poly_finished=1;
         }
     }
+    
     return block;
     
 }

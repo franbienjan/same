@@ -100,8 +100,8 @@ int initialize_rabin_polynomial_defaults();
 int initialize_rabin_polynomial(uint64_t prime, unsigned max_size, unsigned int min_size, unsigned int average_block_size);
 
 void print_rabin_poly_to_file(FILE *out_file, struct rabin_polynomial *poly,int new_line);
-char ** print_rabin_poly_list_to_file(FILE *out_file, struct rabin_polynomial *poly, char file_dest[], FILE *fin); //
-char ** split_into_chunks(FILE *out_file,char file_dest[], FILE *fin,int c,int val[],int partitions); //
+void print_rabin_poly_list_to_file(FILE *out_file, struct rabin_polynomial *poly, char file_dest[], FILE *fin, char filename[]); //
+void split_into_chunks(FILE *out_file,char file_dest[], FILE *fin,int c,int val[],int partitions); //
 char * hashing(char *string); //
 void test(int err, const char* msg); //
 /*
