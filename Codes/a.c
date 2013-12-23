@@ -100,6 +100,9 @@ void initializeFileList(char *name, int level){
 	struct dirent *ent;
 	char path[1024]="";
     char t[ 512 ] = "";
+	
+	char ctime[100], mtime[100], atime[100];
+	
     int len;
 	struct stat b;
 	if (!(dir = opendir(name))) return;
@@ -137,21 +140,126 @@ void initializeFileList(char *name, int level){
             fprintf(file1, "%d|", size);
 			fprintf(file2, "%d|",size);
 
-            strftime(t, 100, "%m%d%Y-%H:%M:%S", localtime(&b.st_ctime));
-            fprintf(file1, "%s|",t);
-			fprintf(file2, "%s|",t);
+            strftime(ctime, 100, "%S:%M:%H:%d:%m:%Y", localtime(&b.st_ctime));
+            //fprintf(file1, "%s|",ctime);
+			//fprintf(file2, "%s|",ctime);
+			printf("CREATED: %s\n", ctime);
 
-            strftime(t, 100, "%m%d%Y-%H:%M:%S", localtime(&b.st_mtime));
+            strftime(mtime, 100, "%S:%M:%H:%d:%m:%Y", localtime(&b.st_mtime));
             //printf("%s|",t);
-            fprintf(file1, "%s|",t);
-			fprintf(file2, "%s|",t);
+            //fprintf(file1, "%s|",mtime);
+			//fprintf(file2, "%s|",mtime);
+			printf("MODIFIED: %s\n", mtime);
 
-            strftime(t, 100, "%m%d%Y-%H:%M:%S", localtime(&b.st_atime));
+            strftime(atime, 100, "%S:%M:%H:%d:%m:%Y", localtime(&b.st_atime));
             //printf("%s",t);
-			fprintf(file2, "%s\n",t);
-			strcat(t,"|");
-            fprintf(file1, "%s||\"%s\"\n",t,file);
+			//fprintf(file2, "%s\n", atime);
+			//strcat(atime,"|");
+            //fprintf(file1, "%s||\"%s\"\n",atime,file);
 			
+			/* EXPERIMENT: File Age
+			 * Note: Since File Age can be edited, we should proceed cautiously.
+			 * File Age is considered to be [NOW] - [Created / Last Modified Time] in seconds
+			 *
+			 * TASKS:
+			 * [X] Compare Created Time and Modified Time (get what's earlier)
+			 * [X] Get current time
+			 * [X] Get year and months for each of the two times
+			 * [X] Get difference and place it.
+			 * [ ] Stamp File Age (in terms of days)
+			 */
+			
+			char *splitCr[6], *splitMo[6], *splitCurr[6];
+			int i = 0;
+			
+			//Parse created time and modified time and current time
+			i = 0;
+			splitCr[i] = strtok(ctime, ":");
+			while (splitCr[i] != NULL) {
+				splitCr[++i] = strtok(NULL, ":");
+			}
+			
+			i = 0;
+			splitMo[i] = strtok(mtime, ":");
+			while (splitMo[i] != NULL) {
+				splitMo[++i] = strtok(NULL, ":");
+			}	
+
+			time_t nownow;
+			time(&nownow);
+			strftime(t, 100, "%S:%M:%H:%d:%m:%Y", localtime(&nownow));
+			
+			printf("CURRENT TIME: %s\n", t);
+			
+			i = 0;
+			splitCurr[i] = strtok(t, ":");
+			while (splitCurr[i] != NULL) {
+				splitCurr[++i] = strtok(NULL, ":");
+			}
+			
+			//Semaphore for Created (0) or Modified (1)
+			int mode = 0;
+			
+			//Compare created and modified time
+			//UGH THIS IS SO DIRTY
+			if (atoi(splitCr[5]) < atoi(splitMo[5])) {			//year
+				mode = 0;
+			} else if (atoi(splitCr[5]) > atoi(splitMo[5])) {		
+				mode = 1;
+			} else {											
+				if (atoi(splitCr[4]) < atoi(splitMo[4])) {		//month
+					mode = 0;
+				} else if (atoi(splitCr[4]) > atoi(splitMo[4])) {
+					mode = 1;
+				} else {				
+					if (atoi(splitCr[3]) < atoi(splitMo[3])) {	//day
+						mode = 0;
+					} else if (atoi(splitCr[3]) > atoi(splitMo[3])) {
+						mode = 1;
+					} else {									//hour
+						if (atoi(splitCr[2]) < atoi(splitMo[2])) {
+							mode = 0;
+						} else if (atoi(splitCr[2]) > atoi(splitMo[2])) {
+							mode = 1;
+						} else {								//minute
+							if (atoi(splitCr[1]) < atoi(splitMo[1])) {
+								mode = 0;
+							} else if (atoi(splitCr[1]) > atoi(splitMo[1])) {
+								mode = 1;
+							} else {
+								printf("LOL THIS IS THE END!");
+							}
+						}
+					}
+				}
+			}
+			
+			int diffyear = 0, diffmonth = 0, diffday = 0, diffhour = 0;
+			
+			//Get "File Age" of file
+			if (mode == 0) {				//Created
+				printf("USE CREATED!!!\n");
+				diffyear = abs(atoi(splitCr[5]) - atoi(splitCurr[5]));
+				diffmonth = abs(atoi(splitCr[4]) - atoi(splitCurr[4]));
+				diffday = abs(atoi(splitCr[3]) - atoi(splitCurr[3]));
+				diffhour = abs(atoi(splitCr[2]) - atoi(splitCurr[2]));	
+			} else if (mode == 1) {
+				printf("USE MODIFIED!!!\n");
+				diffyear = abs(atoi(splitMo[5]) - atoi(splitCurr[5]));
+				diffmonth = abs(atoi(splitMo[4]) - atoi(splitCurr[4]));
+				diffday = abs(atoi(splitMo[3]) - atoi(splitCurr[3]));
+				diffhour = abs(atoi(splitMo[2]) - atoi(splitCurr[2]));	
+			}
+			
+			//Test
+			for (i = 0; i < 6; i++)
+				printf("$ %s %s %s\n", splitCurr[i], splitCr[i], splitMo[i]);
+			
+			//Convert in terms of days (leap year automatically assumed 365, month assumed 30)
+			diffday += (diffyear*365) + (diffmonth*30);
+			
+			fprintf(file2, "%d\n", diffday);
+			fprintf(file1, "%d||\"%s\"\n",diffday,file);
 		}
 			
 			
@@ -196,6 +304,7 @@ void raf() {
 	    i=1;
 	    head=folder;
 		
+		printf("\n[0] Initialize a backup session from scratch (this clears hashcatalog.txt)");
 		/* lists the options */
 	    while(head!=NULL){
 	    	printf("\n[%d] Initialize %s",i++,head->fname);

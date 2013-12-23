@@ -3,17 +3,16 @@
 //* [X] Fix Bloom Filter Data Structure
 //* [X] Compare and filter out duplicate files
 //* [X] Ignore and filter out small files (<8000)
-//* [ ] Read paper on SIFL and File Locality
-//*     >> [ ] Compare file to folder (in extreme binning-ish technique)
-//*     >> [ ] Stream Informed File Layout technique
-//*		>> [ ] Cache files
+//* [X] Read paper on SIFL and File Locality
+//*     >> [X] Compare file to folder (in extreme binning-ish technique)
+//*     >> [X] Stream Informed File Layout technique
+//*		>> [X] Cache files
 //**********************************************************************
 
 //**********************************************************************
 //* NOTES:
 //*	[X] Hash lang ang ilagay Bloom Filter, pero store yung whole
-//* [ ] Produce a return text file for LCD Stage of the game
-//* [ ] 
+//* [X] Produce a return text file for LCD Stage of the game 
 //*
 //**********************************************************************
 
@@ -96,7 +95,7 @@ void masterServer(FILE *f1, FILE *f2, FILE *f3, char *buffer) {
 	
 	rewind(f1);
 	rewind(f2);
-	bloom_init(&bloom, hashcatalogentries + entries, 0.01);
+	bloom_init(&bloom, hashcatalogentries + entries, 0.01);	
 	
 	//add hashcatalog entries to bloom filter
 	while (fgets (line, 300, f2) != NULL) {
@@ -104,6 +103,28 @@ void masterServer(FILE *f1, FILE *f2, FILE *f3, char *buffer) {
 		splithash[i] = strtok(line, "|");
 		while (splithash[i] != NULL)
 			splithash[++i] = strtok(NULL, "|");
+		
+	
+		//****************** EXPERIMENT *********************
+		//**        	File Age Restriction
+		//**
+		//**	The Master Server will not add files that 
+		//**		 are more than X days old.
+		//**
+		//**		 Lets hope may difference ahahahaha.
+		//**
+		//**   Please remove if you want to have normal SAM
+		//**
+		//** In this case, X = 500; PLEASE ADJUST
+		
+		if (atoi(splithash[3]) > 500) {
+			printf("HAHAHAHA TIGULANG NA KA! %s\n", splithash[0]);
+			continue;
+		}
+		
+		//**
+		//**
+		//***************************************************
 		
 		bloom_add(&bloom, splithash[1], strlen(splithash[1]));
 	}
@@ -120,16 +141,14 @@ void masterServer(FILE *f1, FILE *f2, FILE *f3, char *buffer) {
 		//Size Filter
 		num = atoi(splithash[2]);
 		if (num >= 8000) {
+		
 			//Cache Check; NOTE: Hash lang ang nakastore sa Cache
 			while (fgets (cacheline, 300, f3) != NULL) {
 				cacheline[strlen(cacheline) - 1] = '\0';
 				
-				//printf("CHECK IN!! %s || %s\n", cacheline, splithash[1]);
 				if (strcmp(splithash[1], cacheline) == 0) {
-					//printf("IT EXISTS SA CACHEEEEEEEEEEEE\n");
 					nobloom = 1;				
-				} else ;
-					//printf("WALA HUHUHU\n");
+				}
 					
 			}
 			
@@ -155,6 +174,7 @@ void masterServer(FILE *f1, FILE *f2, FILE *f3, char *buffer) {
 	
 }
 
+//Everything begins here, dearies!
 void fran() {
 
 	FILE *f1, *f2, *f3;
@@ -170,10 +190,13 @@ void fran() {
     		strcat(buffer,ent->d_name);
     		printf("\nReading:%s",buffer);
 			
-			if(strstr(buffer,".ret")!=NULL) continue;
+			//Ignore .ret files
+			if(strstr(buffer,".ret")!=NULL) 
+				continue;
 
 			f1 = fopen (buffer, "r");
-    		if(!f1) printf("\nno file:%s",buffer);
+    		if(!f1) 
+				printf("\nno file:%s",buffer);
 
     		f2 = fopen ("hashcatalog.txt", "r+");
     		//f2 = fopen ("../Raf/uniquefiles.txt", "r+");
@@ -181,7 +204,7 @@ void fran() {
 
 			strcat(buffer,".ret");
 
-			masterServer(f1, f2, f3,buffer);
+			masterServer(f1, f2, f3, buffer);
 
 			fclose(f2);
 			fclose(f3);
