@@ -71,13 +71,14 @@ int chunk_limit = 150; //variable that limits chunking
 
 uint64_t *polynomial_lookup_buf;
 
-
+/*
 void test(int err, const char* msg) { // asterisk
     if (err) {
         fprintf(stderr, "%s: error %d\n", msg, err);
         exit(1);
     }
 }
+*/
 
 // HASHES CHUNK
 char * hashing(char *string){ // asterisk
