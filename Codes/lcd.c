@@ -29,7 +29,7 @@
 char *file_agent_dir = "./";
 //char *file_agent_dir_system = "\"File Agent\"\\";
 char *file_storage_dir = "./Storage/";
-char *chunk_storage_dir = "../chunkstempofolder"; //"chunkstempofolder";
+char *chunk_storage_dir = "./chunkstempofolder"; //"chunkstempofolder";
 
 int chunk_storage_exists = 0;
 int file_count = 0;

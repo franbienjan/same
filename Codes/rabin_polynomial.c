@@ -175,7 +175,7 @@ void split_into_chunks(FILE *out_file, char file_dest[], FILE *fin, int c, int v
 				int k = 0;
 				
 				if(cur_chunk_count == chunk_limit){ // EXTREME BINNING
-					strcpy(concat,"../chunkstempofolder/");
+					strcpy(concat,"./chunkstempofolder/");
 					strcat(concat,"__bin__");
 					strcat(concat,fn);
 					strcat(concat,"__");
@@ -216,7 +216,7 @@ void split_into_chunks(FILE *out_file, char file_dest[], FILE *fin, int c, int v
 		else{
 			if(cur_chunk_count < chunk_limit){
 				t = cur_chunk_count;
-				strcpy(concat,"../chunkstempofolder/");
+				strcpy(concat,"./chunkstempofolder/");
 				strcat(concat,"__bin__");
 				strcat(concat,fn);
 				strcat(concat,"__");

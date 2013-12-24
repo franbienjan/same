@@ -9,7 +9,7 @@ void main(){
 	fran();
 	
 	//Chy("./Outputs/out.Client 5 Files.ret");
-	/*printf("\nSTART DIR");
+	printf("\nSTART DIR");
 	DIR *dir;
 	struct dirent *ent;
 	if (!(dir = opendir("./Outputs"))) return;

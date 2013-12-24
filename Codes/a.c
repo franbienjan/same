@@ -549,7 +549,7 @@ void compareFiles(const char *name, int level,FILE *f){
                     //strcat(t,getSha(path,tempStr2));
                     sha=getSha(path,tempStr2);
                     //printf("\n=====%s",getSha(path,tempStr2));
-                    //if(remove(tempStr)==0) printf("\nDeleted:%s",tempStr);
+                    if(remove(tempStr)==0) /*printf("\nDeleted:%s",tempStr)*/;
                 }else 
 
                 sha=getSha(path,ent->d_name);//strcat(t, getSha(path,ent->d_name));
