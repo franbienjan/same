@@ -149,7 +149,25 @@ void getFileNames(char *string){
 			printf("fc: %d\n",file_count);
 		}
 		else{
-			printf("not read: %s\n",fileName); // print all files accepted
+			//printf("not read: %s\n",fileName); // print all files accepted
+			FILE *src=fopen(fDir,"rb");
+			if(src){
+				char dest[strlen(fileName)+20];
+				strcpy(dest,"./chunkstempofolder/");
+				strcat(dest,fileName);
+				FILE *tg=fopen(dest,"wb");
+				
+				char bb;
+				do{
+					bb = getc (src);
+					fputc(bb,tg);
+				}while (!feof(src));
+				fclose(tg);
+				free(tg);
+			}else printf("********************************NO FILE FOUND********************************\n");
+			fclose(src);
+			free(src);
+			
 		}
 	}
 	printf("hurpdup\n");
