@@ -272,8 +272,8 @@ void rabinChunking(){
 		fin = fopen(concat, "rb");
 		memset(concat, 0, sizeof concat);
 		
-		strcpy(concat,file_agent_dir);
-		strcat(concat,"/");
+		//strcpy(concat,file_agent_dir);
+		//strcat(concat,"/");
 		strcat(concat,chunk_storage_dir);
 		strcat(concat,"/");
 		

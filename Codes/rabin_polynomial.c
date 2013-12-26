@@ -125,6 +125,7 @@ void split_into_chunks(FILE *out_file, char file_dest[], FILE *fin, int c, int v
 	long i = 0, j = 0;
 	int length,counter = 0;
 	char *chunkptr;
+	char *tmp_for_small;
 	char split[300],shahash[50];
 	char ** hashes_array = malloc(chunk_limit * sizeof(char*)); //malloc(partitions * sizeof(char*));
 	int chunk = 18000; //?
@@ -154,7 +155,7 @@ void split_into_chunks(FILE *out_file, char file_dest[], FILE *fin, int c, int v
 		//printf("cur_poly->length = %d \n",val[j]);//
 		j+=1;
 		
-		if(f > 0){
+		if(chunkcount > 2 && f > 0){
 			//sprintf(split, "%s.%ld.bin", file_dest, ++i); //
 			//printf("____________________\n");
             strcpy(shahash,hashing(chunkptr));
@@ -170,7 +171,7 @@ void split_into_chunks(FILE *out_file, char file_dest[], FILE *fin, int c, int v
 			cur_chunk_count += 1;
 			
 			if(cur_chunk_count % chunk_limit == 0){
-				printf("HURDURHURDUR\n");
+				printf("Reaches the 150-chunk-mark.\n");
 				bin_count += 1;
 				int k = 0;
 				
@@ -197,23 +198,54 @@ void split_into_chunks(FILE *out_file, char file_dest[], FILE *fin, int c, int v
 			}
 			
 			
-		}else break;
+		}
+		else if(chunkcount <= 2 && f > 0){
+			cur_chunk_count += 1;
+			if(chunkcount == 1 && cur_chunk_count == 1){
+				strcpy(shahash,hashing(chunkptr));
+				sprintf(split,"%s%s.bin",file_dest,shahash);
+				out_file = fopen(split, "wb");
+				
+				fwrite(chunkptr, 1, (int) f, out_file);
+				fclose(out_file);
+			}
+			else if(chunkcount == 2 && cur_chunk_count == 1){
+				strcpy(shahash,hashing(chunkptr));
+				sprintf(split,"%s%s__",file_dest,shahash);
+				
+				tmp_for_small = chunkptr;
+			}
+			else if(chunkcount == 2 && cur_chunk_count == 2){
+				strcpy(shahash,hashing(chunkptr));
+				strcat(split,shahash);
+				strcat(split,".bin");
+				out_file = fopen(split, "wb");
+				
+				fwrite(tmp_for_small, 1, (int) f, out_file);
+				fwrite(chunkptr, 1, (int) f, out_file);
+				fclose(out_file);
+			}
+		}
+		else break;
 	}
 	
 	if(cur_chunk_count % chunk_limit != 0){
 		int t = 0;
 		int k = 0;
-		
+		/*
 		if(cur_chunk_count <= 2){ /////////////////////////////////// omg copy file blablabla no need to chunk, tas yung name lang magiiba okay??? (append) mamaya na haha
 			char holder[100];
-			strcpy(holder,hashes_array[0]);
+			strcpy(concat,"./chunkstempofolder/");
+			strcat(holder,hashes_array[0]);
+			t = 1;
 			if(cur_chunk_count == 2){
 				strcat(holder,"_");
 				strcat(holder,hashes_array[1]);
+				t = 2;
 			}
-			//strcpy(temp->chunkID,holder);
-		}
-		else{
+			strcat(concat,".bin");
+		}*/
+		if(cur_chunk_count > 2){
 			if(cur_chunk_count < chunk_limit){
 				t = cur_chunk_count;
 				strcpy(concat,"./chunkstempofolder/");
