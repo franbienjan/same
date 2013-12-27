@@ -67,7 +67,7 @@ int min_sha_check = 0; //revision (DO NOT DELETE): stop minimum_sha check once f
 char fn[100];
 int mindex = 9000;
 int chunkcount = 0;
-int chunk_limit = 150; //variable that limits chunking
+int chunk_limit = 100; //variable that limits chunking
 
 uint64_t *polynomial_lookup_buf;
 
@@ -143,8 +143,6 @@ void split_into_chunks(FILE *out_file, char file_dest[], FILE *fin, int c, int v
 	int bin_count = 0;
 	chunkcount = partitions + 1;
 	
-	
-	
 	// THE WHILE LOOP THAT SPLITS
 	while(1){
 		long f;
@@ -158,6 +156,7 @@ void split_into_chunks(FILE *out_file, char file_dest[], FILE *fin, int c, int v
 		if(chunkcount > 2 && f > 0){
 			//sprintf(split, "%s.%ld.bin", file_dest, ++i); //
 			//printf("____________________\n");
+			
             strcpy(shahash,hashing(chunkptr));
             sprintf(split, "%s%s.bin",file_dest,shahash); // might add .filetype some other time?!?!?!? ito yung pampalit sa split (chunk name == chunk id)
 			out_file = fopen(split, "wb"); //
@@ -171,7 +170,7 @@ void split_into_chunks(FILE *out_file, char file_dest[], FILE *fin, int c, int v
 			cur_chunk_count += 1;
 			
 			if(cur_chunk_count % chunk_limit == 0){
-				printf("Reaches the 150-chunk-mark.\n");
+				printf("Reaches the 100-chunk-mark.\n");
 				bin_count += 1;
 				int k = 0;
 				
@@ -196,7 +195,6 @@ void split_into_chunks(FILE *out_file, char file_dest[], FILE *fin, int c, int v
 				fclose(bin);
 				j = 0;
 			}
-			
 			
 		}
 		else if(chunkcount <= 2 && f > 0){
@@ -232,19 +230,6 @@ void split_into_chunks(FILE *out_file, char file_dest[], FILE *fin, int c, int v
 	if(cur_chunk_count % chunk_limit != 0){
 		int t = 0;
 		int k = 0;
-		/*
-		if(cur_chunk_count <= 2){ /////////////////////////////////// omg copy file blablabla no need to chunk, tas yung name lang magiiba okay??? (append) mamaya na haha
-			char holder[100];
-			strcpy(concat,"./chunkstempofolder/");
-			strcat(holder,hashes_array[0]);
-			t = 1;
-			if(cur_chunk_count == 2){
-				strcat(holder,"_");
-				strcat(holder,hashes_array[1]);
-				t = 2;
-			}
-			strcat(concat,".bin");
-		}*/
 		if(cur_chunk_count > 2){
 			if(cur_chunk_count < chunk_limit){
 				t = cur_chunk_count;
@@ -256,7 +241,7 @@ void split_into_chunks(FILE *out_file, char file_dest[], FILE *fin, int c, int v
 				strcat(concat,".bin");
 			}
 			else{
-				t = chunkcount-(bin_count*chunk_limit);
+				t = cur_chunk_count-(bin_count*chunk_limit);
 			}
 			bin = fopen(concat, "a");
 			

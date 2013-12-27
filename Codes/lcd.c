@@ -314,6 +314,8 @@ int Chy(char *str){
 	// rabin fingerprinting, SHA-1, extreme binning
     rabinChunking();
 	
+	file_count = 0;
+	
 	return 0;
     
 }
