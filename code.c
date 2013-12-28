@@ -12,7 +12,6 @@ void main(){
     gettimeofday(&start, NULL);
 
 	
-	
 	//
 	raf();
 	fran();

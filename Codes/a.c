@@ -312,15 +312,30 @@ void raf() {
 	    }
 	    head=folder;
 	    folderNum=i-1;
-	    printf("\n[%d] Exit\n: ",i++);
+	    printf("\n[%d] Delete chunk files\n[%d] Exit\n:",i,i+1);
 		///////////////////////
 		
 		
 	    scanf("%d",&folderChoice);
 		
 		/* code according to choice */
-	    if(folderChoice==(folderNum+1)) break;
-		else if(folderChoice==0){
+	    if(folderChoice==(folderNum+2)) break;
+		else if(folderChoice==(folderNum+1)){
+			DIR *dirDel;
+			struct dirent *entDel;
+			
+			if (!(dirDel = opendir("./chunkstempofolder"))) return;
+			if (!(entDel = readdir(dirDel))) return;
+			do{
+				if(entDel->d_type!=DT_DIR){
+					char strDel[strlen(entDel->d_name)+20];
+					strcpy(strDel,"./chunkstempofolder/");
+					strcat(strDel,ent->d_name);
+					remove(strDel);
+				}
+			}while(ent = readdir(dirDel));
+			closedir(dirDel);
+		}else if(folderChoice==0){
             printf("Cleared");
             FILE *ff;
             ff=fopen("hashcatalog.txt","w");
@@ -341,7 +356,7 @@ void raf() {
                     remove(tempStr);
                 }
             }while (ent2 = readdir(dir2));
-    	}else{
+    	}else if(folderChoice>0 && folderChoice<=folderNum){
 			for(i=1 ; i<folderChoice ; i++) head=head->next;
 			char temp[strlen(head->fname)+14];
 			file1=fopen("initFiles.txt","w+");

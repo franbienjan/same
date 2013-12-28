@@ -139,7 +139,7 @@ void getFileNames(char *string){
 		
 		printf("fDir: %s \nfileName: %s \nfExt: %s\n",fDir,fileName,fExt);
 		//maybe add a.out
-		if(strcmp(fExt,".DS_Store") && strcmp(fExt,chunk_storage_dir) && strcmp(fExt,".bmp") && strcmp(fExt,".png") && strcmp(fExt,".jpg") && strcmp(fExt,".jpeg") && strcmp(fExt,".gif") && strcmp(fExt,".zip") && strcmp(fExt,".rar") && strcmp(fExt,".tar") && strcmp(fExt,".tiff") && strcmp(fExt,".svg") && strcmp(fExt,".mp3") && strcmp(fExt,".mp4") && strcmp(fExt,".mkv") && strcmp(fExt,".exe") && strcmp(fileName,"a.out")){
+		if(strcasecmp(fExt,".DS_Store") && strcasecmp(fExt,chunk_storage_dir) && strcasecmp(fExt,".bmp") && strcasecmp(fExt,".png") && strcasecmp(fExt,".jpg") && strcasecmp(fExt,".jpeg") && strcasecmp(fExt,".gif") && strcasecmp(fExt,".zip") && strcasecmp(fExt,".rar") && strcasecmp(fExt,".tar") && strcasecmp(fExt,".tiff") && strcasecmp(fExt,".svg") && strcasecmp(fExt,".mp3") && strcasecmp(fExt,".mp4") && strcasecmp(fExt,".mkv") && strcasecmp(fExt,".exe") && strcasecmp(fExt,".mov") && strcasecmp(fExt,".avi") && strcasecmp(fileName,"a.out")){
 			printf("read: %s\n",fileName); // print all files accepted
 			strcpy(t1->filedir,fDir);
 			strcpy(t1->filename,fileName);
