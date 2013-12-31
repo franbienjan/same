@@ -98,6 +98,7 @@ void masterServer(FILE *f1, FILE *f2, FILE *f3, char *buffer) {
 	bloom_init(&bloom, hashcatalogentries + entries, 0.01);	
 	
 	//add hashcatalog entries to bloom filter
+	
 	while (fgets (line, 300, f2) != NULL) {
 		i = 0;
 		splithash[i] = strtok(line, "|");
