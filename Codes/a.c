@@ -268,115 +268,78 @@ void initializeFileList(char *name, int level){
 }
 
 
-void raf() {
+int raf() {
 	int i=1,
         folderNum=0,
-        folderChoice=0;
-    DIR *dir;
-    FolderList *folder, *head, *node, *lastNode;		//////////
+        folderChoice=0,br=0;
+    
     struct dirent *ent;
 	FILE *f;
-    do{
-    	i=1;
-    	folder=(FolderList*)malloc(sizeof(FolderList));
-		head=folder;
-		lastNode=NULL;
-
-		if (!(dir = opendir("."))) return;
-		if (!(ent = readdir(dir))) return;
-	    do{
-
-	    	if(ent->d_type==DT_DIR && strstr(ent->d_name,"Client")){
-	    		if(i==1){
-	    			head->fname=(char *)malloc(sizeof(char)*strlen(ent->d_name));
-	    			strcpy(head->fname, ent->d_name);
-	    		}else{
-	    			node=(FolderList*)malloc(sizeof(FolderList));
-	    			node->fname=(char *)malloc(sizeof(char)*strlen(ent->d_name));
-	    			strcpy(node->fname, ent->d_name);
-	    			head->next=node;
-	    			head=head->next;
-	    			head->next=NULL;
-	    		}
-	    		i++;
-	    	}
-	    }while(ent = readdir(dir));
-	    i=1;
-	    head=folder;
-		
-		printf("\n[0] Initialize a backup session from scratch (this clears hashcatalog.txt)");
-		/* lists the options */
-	    while(head!=NULL){
-	    	printf("\n[%d] Initialize %s",i++,head->fname);
-	    	head=head->next;
-	    }
-	    head=folder;
-	    folderNum=i-1;
-	    printf("\n[%d] Delete chunk files\n[%d] Exit\n:",i,i+1);
-		///////////////////////
-		
-		
-	    scanf("%d",&folderChoice);
+	do{
+		printf("\n[1] Initialize a backup session from scratch (this clears hashcatalog.txt)");
+	    printf("\n[2] Delete chunk files");
+		printf("\n[3] Deduplicate \"Files\" folder\n[4] Exit\n:");
+		scanf("%d",&folderChoice);
 		
 		/* code according to choice */
-	    if(folderChoice==(folderNum+2)) break;
-		else if(folderChoice==(folderNum+1)){
-			DIR *dirDel;
-			struct dirent *entDel;
-			
-			if (!(dirDel = opendir("./chunkstempofolder"))) return;
-			if (!(entDel = readdir(dirDel))) return;
-			do{
-				if(entDel->d_type!=DT_DIR){
-					char strDel[strlen(entDel->d_name)+20];
-					strcpy(strDel,"./chunkstempofolder/");
-					strcat(strDel,ent->d_name);
-					remove(strDel);
-				}
-			}while(ent = readdir(dirDel));
-			closedir(dirDel);
-		}else if(folderChoice==0){
-            printf("Cleared");
-            FILE *ff;
-            ff=fopen("hashcatalog.txt","w");
-            fclose(ff);
-            ff=fopen("cache.txt","w");
-            fprintf(ff,"onwoief\n");
-            fclose(ff);
+		switch(folderChoice){
+			case 1:{
+				FILE *ff;
+				ff=fopen("hashcatalog.txt","w");
+				fclose(ff);
+				ff=fopen("cache.txt","w");
+				fprintf(ff,"onwoief\n");
+				fclose(ff);
 
-            DIR *dir2;
-            struct dirent *ent2;
-            if(!(dir2 = opendir("./Outputs"))){ printf("-----------------------"); return;}
-            if(!(ent2 = readdir(dir2))) return;
-            do{
-                if(strcmp(ent2->d_name,"..")!=0 && strcmp(ent2->d_name,".")!=0){
-                    char tempStr[9+strlen(ent2->d_name)];
-                    strcpy(tempStr,"./Outputs/");
-                    strcat(tempStr,ent2->d_name);
-                    remove(tempStr);
-                }
-            }while (ent2 = readdir(dir2));
-    	}else if(folderChoice>0 && folderChoice<=folderNum){
-			for(i=1 ; i<folderChoice ; i++) head=head->next;
-			char temp[strlen(head->fname)+14];
-			file1=fopen("initFiles.txt","w+");
-			
-            strcpy(temp,"./Outputs/out.");
-            strcat(temp,head->fname);
-            file2=fopen(temp,"w+");
-			
-			strcpy(temp,"./");
-			strcat(temp,head->fname);
-			
-			initializeFileList(temp,0);
-			fclose(file1);
-			fclose(file2);
+				DIR *dir;
+				struct dirent *ent2;
+				if(!(dir = opendir("./Outputs"))){ printf("No \"Outputs\" folder!"); return;}
+				if(!(ent2 = readdir(dir))) return;
+				do{
+					if(strcmp(ent2->d_name,"..")!=0 && strcmp(ent2->d_name,".")!=0){
+						char tempStr[9+strlen(ent2->d_name)];
+						strcpy(tempStr,"./Outputs/");
+						strcat(tempStr,ent2->d_name);
+						remove(tempStr);
+					}
+				}while (ent2 = readdir(dir));
+				printf("Cleared");
+				break;
+			}case 2:{
+				DIR *dirDel;
+				struct dirent *entDel;
+				
+				if (!(dirDel = opendir("./chunkstempofolder"))) return;
+				if (!(entDel = readdir(dirDel))) return;
+				do{
+					if(entDel->d_type!=DT_DIR){
+						char strDel[strlen(entDel->d_name)+100];
+						strcpy(strDel,"./chunkstempofolder/");
+						strcat(strDel,ent->d_name);
+						remove(strDel);
+					}
+				}while(ent = readdir(dirDel));
+				closedir(dirDel);
+				break;
+			}case 3:{
+				file1=fopen("initFiles.txt","w+");
+				file2=fopen("./Outputs/out.Files","w+");
+				
+				initializeFileList("./Files",0);
+				fclose(file1);
+				fclose(file2);
+				br=1;
+				break;
+			}case 4:{
+				br=1;
+				break;
+			}
 		}
 		//////////////////////////////
 		
-	    letGo(folder);
-	}while(1);
-	closedir(dir);
+	}while(!br);
+	if(folderChoice==3) return 1;
+	else return 0;
 }
 
 void initFileList(const char *name, int level,FILE *f){
