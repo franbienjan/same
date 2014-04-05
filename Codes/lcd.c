@@ -81,7 +81,7 @@ void getFileNames(char *string){
 	//int isDir = 0;
 	//struct dirent *ent;
 	struct files *t1;
-	char fn[100],tfold[300];
+	char filehash[50];
 	int i;
 	
 	//printf("FILECOUNT: %d\n",file_count);
@@ -113,6 +113,9 @@ void getFileNames(char *string){
 		}
 		strncpy(fDir, strhld, i);
 		fDir[i] = '\0';
+		strncpy(filehash,strhld+(i+1),40);
+		filehash[40] = '\0';
+		//printf("%s\n",filehash);
 		memset(strhld, 0, sizeof strhld);
 		
 	// fileName
@@ -155,7 +158,8 @@ void getFileNames(char *string){
 			if(src){
 				char dest[strlen(fileName)+20];
 				strcpy(dest,"./chunkstempofolder/");
-				strcat(dest,fileName);
+				strcat(dest,filehash);
+				strcat(dest,fExt);
 				FILE *tg=fopen(dest,"wb");
 				
 				char bb;
